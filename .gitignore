@@ -1,0 +1,66 @@
+# Игнорировать файлы и каталоги, создаваемые Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pkl
+*.egg
+*.egg-info/
+*.dist-info/
+*.tox/
+*.nox/
+*.coverage
+*.coverage.*
+*.hypothesis/
+.coverage
+*.idea/
+*.vscode/
+*.env
+*.venv/
+venv/
+ENV/
+env/
+*.db
+*.sqlite3
+
+# Игнорировать файлы и каталоги Django
+*.log
+local_settings.py
+db.sqlite3
+
+# Игнорировать файлы и каталоги, специфичные для React
+node_modules/
+build/
+*.log
+*.lock
+*.cache
+*.tmp
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+.pnp.js
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.local
+
+# Игнорировать временные файлы
+*.tmp
+*.bak
+*.swp
+
+# Игнорировать файлы с настройками среды и конфиденциальные данные
+.env
+*.env
+
+# Игнорировать файлы системы контроля версий и IDE
+*.sublime-project
+*.sublime-workspace
+*.vscode/
+*.idea/
+
+# Игнорировать файлы, специфичные для операционной системы
+.DS_Store
+Thumbs.db
