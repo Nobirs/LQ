@@ -2,6 +2,7 @@ from rest_framework import viewsets, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import PermissionDenied
 from .models import Task
 from .serializers import TaskSerializer
 
@@ -21,6 +22,15 @@ class TaskViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Connect current task to user
         serializer.save(user=self.request.user)
+
+    
+    def destroy(self, request, *args, **kwargs):
+        task = self.get_object()
+
+        if task.status != 'COMPLETED':
+            raise PermissionDenied("You can only delete task that are completed.")
+
+        return super().destroy(request, *args, **kwargs)
 
 
     @action(detail=False, methods=['get'])
