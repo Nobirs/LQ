@@ -54,11 +54,20 @@ class TaskTests(APITestCase):
         self.assertEqual(response.data['title'], 'Updated Task')
         self.assertEqual(response.data['priority'], 7)
 
-    def test_delete_task(self):
+    def test_delete_uncompleted_task(self):
         # Создаем задачу
         task = Task.objects.create(title='Task to be deleted', priority=5, user=self.user)
         url = f'/api/tasks/{task.id}/'
         response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # Проверяем, что задача не была удалена
+        self.assertEqual(Task.objects.count(), 1)
+    
+    def test_delete_completed_task(self):
+        task = Task.objects.create(title='Task to be deleted', priority=8, status='COMPLETED', user=self.user)
+        url = f'/api/tasks/{task.id}/'
+        response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
-        # Проверяем, что задача действительно удалена
+        # Проверяем, что задача удалена
         self.assertEqual(Task.objects.count(), 0)
+
