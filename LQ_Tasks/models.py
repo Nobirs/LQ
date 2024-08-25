@@ -40,3 +40,12 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title
+    
+
+class SubTask(models.Model):
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    priority = models.IntegerField(choices=Task.PRIORITY_CHOICES)
+    status = models.CharField(max_length=20, choices=Task.STATUS_CHOICES, default='CREATED')
+    deadline = models.DateTimeField(blank=True, null=True)
+    task = models.ForeignKey(Task, related_name='subtasks', on_delete=models.CASCADE)
