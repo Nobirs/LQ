@@ -49,3 +49,15 @@ class SubTask(models.Model):
     status = models.CharField(max_length=20, choices=Task.STATUS_CHOICES, default='CREATED')
     deadline = models.DateTimeField(blank=True, null=True)
     task = models.ForeignKey(Task, related_name='subtasks', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.task} ->  {self.title}'
+    
+
+    def save(self, *args, **kwargs):
+        # Устанавливаем приоритет подзадачи равным приоритету родительской задачи
+        if self.task.priority > 1:
+            self.priority = self.task.priority - 1
+        else:
+            self.priority = self.task.priority
+        super(SubTask, self).save(*args, **kwargs)
