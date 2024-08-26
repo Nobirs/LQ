@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'accounts',
     'LQ_Tasks',
     'rest_framework',
+    'drf_yasg',
 ]
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
