@@ -25,8 +25,7 @@ class CustomUser(AbstractUser):
 
     def increase_level(self):
         self.level += 1
-        if self.points >= 100:
-            self.points -= 100
+        self.points -= 100
     
 
     def can_manage_task(self, task):
