@@ -3,8 +3,12 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
-from .models import Task, SubTask
-from .serializers import TaskSerializer, SubTaskSerializer
+from .models import Task, SubTask, Note
+from .serializers import TaskSerializer, SubTaskSerializer, NoteSerializer
+from django.contrib.contenttypes.models import ContentType
+
+from itertools import chain
+from django.db.models import Q
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -51,8 +55,6 @@ class TaskViewSet(viewsets.ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 class SubTaskViewSet(viewsets.ModelViewSet):
     queryset = SubTask.objects.all()
     serializer_class = SubTaskSerializer
@@ -76,4 +78,67 @@ class SubTaskViewSet(viewsets.ModelViewSet):
     def perform_destroy(self, instance):
         if instance.task.user != self.request.user:
             raise PermissionDenied("You do not have permission to delete this subtask.")
+        instance.delete()
+
+
+class NoteViewSet(viewsets.ModelViewSet):
+    queryset = Note.objects.all()
+    serializer_class = NoteSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        task_content_type = ContentType.objects.get_for_model(Task)
+        subtask_content_type = ContentType.objects.get_for_model(SubTask)
+
+        queryset = Note.objects.filter(
+            Q(content_type=task_content_type, object_id__in=Task.objects.filter(user=user).values('id')) |
+            Q(content_type=subtask_content_type, object_id__in=SubTask.objects.filter(task__user=user).values('id'))
+        ).prefetch_related('content_object')
+
+        return queryset
+
+    
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            print(serializer.errors)  # Логируем ошибки сериализатора
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        if not serializer.is_valid():
+            print(serializer.errors)  # Логируем ошибки сериализатора
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        self.perform_update(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK, headers=headers)
+        return super().update(request, *args, **kwargs)
+    
+    def have_permission(self, obj):
+        if hasattr(obj, 'user'):
+            return obj.user == self.request.user
+        else:
+            return obj.task.user == self.request.user
+
+    def perform_create(self, serializer):
+        obj = serializer.validated_data['content_object']
+
+        if not self.have_permission(obj):
+            raise PermissionDenied("You do not have permission to add notes to this object.")
+        serializer.save()
+    
+    def perform_update(self, serializer):
+        obj = serializer.validated_data['content_object']
+        if not self.have_permission(obj):
+            raise PermissionDenied("You do not have permission to update notes for this object.")
+        serializer.save()
+    
+    def perform_destroy(self, instance):
+        if instance.content_object.user != self.request.user:
+            raise PermissionDenied("You do not have permission to delete this note.")
         instance.delete()
