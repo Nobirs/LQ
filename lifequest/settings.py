@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'accounts',
     'LQ_Tasks',
     'rest_framework',
+    'generic_relations',
     'drf_yasg',
 ]
 
